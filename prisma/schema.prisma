@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Priority {
+  HIGH
+  LOW
+}
+
+model Contact {
+  id              String   @id @default(cuid())
+  name            String
+  phone           String?
+  email           String?
+  company         String?
+  role            String?
+  notes           String?
+  tags            String? // comma-separated tags
+  followUpDate    DateTime?
+  lastContactedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  interactions Interaction[]
+
+  @@index([followUpDate])
+  @@index([name])
+}
+
+model Interaction {
+  id        String   @id @default(cuid())
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  note      String
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([contactId])
+}
+
+model DailyTask {
+  id        String   @id @default(cuid())
+  title     String
+  priority  Priority @default(HIGH)
+  done      Boolean  @default(false)
+  date      DateTime // day (midnight, local) this task belongs to
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+}
+
+model WeeklyTask {
+  id        String   @id @default(cuid())
+  title     String
+  done      Boolean  @default(false)
+  weekStart DateTime // Monday (midnight) of the week this task belongs to
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([weekStart])
+}
