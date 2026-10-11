@@ -34,10 +34,6 @@ yarn-error.log*
 .env*
 !.env.example
 
-# database
-*.db
-*.db-journal
-
 # vercel
 .vercel
 
@@ -45,4 +41,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/src/generated/prisma
+# tests
+/test-results
+/playwright-report
+/blob-report
+
+# supabase local state
+supabase/.temp
+supabase/.branches
