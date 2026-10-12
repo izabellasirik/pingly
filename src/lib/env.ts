@@ -1,22 +1,27 @@
 import "server-only";
 
-function required(name: string): string {
-  const value = process.env[name];
+import {
+  SUPABASE_PUBLIC_KEY_VARS,
+  SUPABASE_SECRET_KEY_VARS,
+  SUPABASE_URL_VARS,
+  getSupabasePublicKey,
+  getSupabaseSecretKey,
+  getSupabaseUrl,
+} from "@/lib/config";
+
+function required(value: string | undefined, names: string[]): string {
   if (!value) {
-    throw new Error(
-      `Missing environment variable ${name}. See README.md → "Environment variables".`,
-    );
+    throw new Error(`Missing environment variable ${names[0]}. Open /setup or see README.md → "Environment variables".`);
   }
   return value;
 }
 
-export const supabaseUrl = () => required("NEXT_PUBLIC_SUPABASE_URL");
-export const supabasePublishableKey = () =>
-  required("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
-export const supabaseSecretKey = () => required("SUPABASE_SECRET_KEY");
+export const supabaseUrl = () => required(getSupabaseUrl(), SUPABASE_URL_VARS);
+export const supabasePublishableKey = () => required(getSupabasePublicKey(), SUPABASE_PUBLIC_KEY_VARS);
+export const supabaseSecretKey = () => required(getSupabaseSecretKey(), SUPABASE_SECRET_KEY_VARS);
 
 export function siteUrl(): string {
-  return (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  return (process.env["APP_URL"] || "http://localhost:3000").replace(/\/$/, "");
 }
 
 /** AI features need an Anthropic API key on the server. */

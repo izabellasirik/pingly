@@ -46,14 +46,27 @@ npm run dev                   # http://localhost:3000
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | yes | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | yes | Public key; all user requests are limited by RLS |
+| `SUPABASE_URL` | yes | Supabase project URL |
+| `SUPABASE_PUBLISHABLE_KEY` | yes | Public key; all user requests are limited by RLS |
 | `SUPABASE_SECRET_KEY` | yes | **Server-only.** Used by the scheduler and account deletion |
 | `APP_URL` | yes | Public app URL, used in auth and reminder emails. Read at runtime |
 | `CRON_SECRET` | yes, for email | Shared secret for `/api/cron/reminders` |
 | `ANTHROPIC_API_KEY` | for AI | Without it, Ask AI shows a notice; everything else works |
 | `PINGLY_AI_MODEL` | no | Model override (default `claude-opus-5-5`) |
 | `RESEND_API_KEY`, `REMINDER_EMAIL_FROM` | for email | Without them, reminders appear in the app only, and the job reports that no email was sent |
+
+All variables are read **at runtime**: change them on your host and the next request picks them up, with no rebuild. The `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` / `*_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` names (e.g. from Supabase's Vercel integration) also work.
+
+### Troubleshooting
+
+Open **`/setup`** on your deployment. Until the Supabase settings are present, every page redirects there. The page lists each missing variable and checks that Supabase is reachable and the database tables exist. Once everything required is in place, it only says "Pingly is set up".
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| Every page redirects to `/setup` | Supabase URL or key not set | Add the variables listed there |
+| `/setup` says "Can't reach Supabase" | Wrong URL, or the project is paused | Check the URL; resume the project in Supabase |
+| `/setup` says "tables don't exist yet" | Migrations not applied | `supabase link` then `supabase db push` |
+| Log in says "Couldn't reach Pingly's server" | Supabase is down or unreachable from your host | Check `/setup` |
 
 ## Reminders and scheduling
 

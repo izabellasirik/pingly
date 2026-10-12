@@ -3,11 +3,13 @@ import { randomUUID } from "node:crypto";
 import type { Database } from "@/lib/supabase/database.types";
 import type { CurrentUser } from "@/lib/auth";
 
-export const url = () => process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const publishable = () => process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+import { getSupabasePublicKey, getSupabaseSecretKey, getSupabaseUrl } from "@/lib/config";
+
+export const url = () => getSupabaseUrl()!;
+const publishable = () => getSupabasePublicKey()!;
 
 export function adminClient() {
-  return createClient<Database>(url(), process.env.SUPABASE_SECRET_KEY!, {
+  return createClient<Database>(url(), getSupabaseSecretKey()!, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

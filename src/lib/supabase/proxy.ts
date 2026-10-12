@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getSupabasePublicKey, getSupabaseUrl, hasRequiredSupabaseConfig } from "@/lib/config";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/forgot", "/auth"];
+const PUBLIC_PATHS = ["/login", "/signup", "/forgot", "/auth", "/setup"];
 
 /**
  * Refreshes the Supabase session cookie on every navigation and sends
@@ -10,11 +11,23 @@ const PUBLIC_PATHS = ["/login", "/signup", "/forgot", "/auth"];
  * enforces ownership in the database.
  */
 export async function updateSession(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+
+  // Not configured yet (e.g. a fresh deploy): explain what's missing instead
+  // of failing every request with a bare 500.
+  if (!hasRequiredSupabaseConfig()) {
+    if (path === "/setup") return NextResponse.next();
+    const url = request.nextUrl.clone();
+    url.pathname = "/setup";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    getSupabaseUrl()!,
+    getSupabasePublicKey()!,
     {
       cookies: {
         getAll() {
@@ -33,9 +46,14 @@ export async function updateSession(request: NextRequest) {
 
   // Do not add code between createServerClient and getClaims: it refreshes
   // the session and must run first.
-  const { data } = await supabase.auth.getClaims();
-  const signedIn = Boolean(data?.claims?.sub);
-  const path = request.nextUrl.pathname;
+  let signedIn = false;
+  try {
+    const { data } = await supabase.auth.getClaims();
+    signedIn = Boolean(data?.claims?.sub);
+  } catch (error) {
+    // Supabase unreachable: treat as signed out rather than failing the request.
+    console.error("[pingly] session check failed:", error);
+  }
   const isPublic = PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 
   if (!signedIn && !isPublic) {

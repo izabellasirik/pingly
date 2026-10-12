@@ -10,7 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * `Authorization: Bearer $CRON_SECRET`. It doesn't depend on any browser.
  */
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
+  const secret = process.env["CRON_SECRET"];
   if (!secret) {
     return Response.json({ error: "CRON_SECRET is not configured" }, { status: 503 });
   }
