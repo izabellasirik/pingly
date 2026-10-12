@@ -49,3 +49,6 @@ next-env.d.ts
 # supabase local state
 supabase/.temp
 supabase/.branches
+
+# logs
+*.log
